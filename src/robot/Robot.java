@@ -7,9 +7,9 @@ import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.Motor;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.SensorConstants;
-import lejos.hardware.sensor.SensorMode;
-import lejos.hardware.sensor.SensorModes;
+import lejos.hardware.sensor.EV3TouchSensor;
+import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.internal.ev3.EV3Battery;
 import lejos.robotics.RegulatedMotor;
 
 
@@ -18,6 +18,9 @@ public class Robot {
 	final RegulatedMotor leftMotor = Motor.C;
 	final RegulatedMotor rightMotor = Motor.B;
 	final  EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
+	final EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S3);
+	final EV3TouchSensor leftTouchSensor = new EV3TouchSensor(SensorPort.S4);
+	final EV3TouchSensor rightTouchSensor = new EV3TouchSensor(SensorPort.S1);
 	
 	public void initializeMotors() {
 		leftMotor.resetTachoCount();
@@ -32,6 +35,26 @@ public class Robot {
 
 	public Actions createActions() {
 		return new Actions(rightMotor, leftMotor);
+	}
+	
+	public RegulatedMotor getLeftMotor() {
+		return this.leftMotor;
+	}
+	
+	public RegulatedMotor getRightMotor() {
+		return this.rightMotor;
+	}
+	
+	public EV3UltrasonicSensor getUltraSonicSensor() {
+		return this.ultrasonicSensor;
+	}
+	
+	public EV3TouchSensor getLeftTouchSensor() {
+		return this.leftTouchSensor;
+	}
+	
+	public EV3TouchSensor getRightTouchSensor() {
+		return this.rightTouchSensor;
 	}
 	
 	public void test() {
@@ -53,6 +76,34 @@ public class Robot {
 	
 	public void test2() {
 		colorSensor.setFloodlight(false);
+	}
+	
+	public void testLabySensors() {
+		while (true) {
+			int samplesize = this.leftTouchSensor.sampleSize();
+			float[] samples = new float[samplesize];
+			this.leftTouchSensor.fetchSample(samples, 0);
+			
+			LCD.drawString("ID =" + samples[0],0,1); 
+	    	
+	    	if (Button.readButtons() != 0) {
+	    		break;
+	    	}
+		}
+	}
+	
+	public void testUltraSonic() {
+		while (true) {
+			int samplesize = this.ultrasonicSensor.sampleSize();
+			float[] samples = new float[samplesize];
+			this.ultrasonicSensor.fetchSample(samples, 0);
+		
+	    	LCD.drawString("Val =" + samples[0],0,1); 
+	    	
+	    	if (Button.readButtons() != 0) {
+	    		break;
+	    	}
+		}
 	}
 	
 	public Line createNewLineBehavior() {

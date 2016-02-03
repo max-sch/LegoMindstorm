@@ -1,6 +1,5 @@
 package actions;
 
-import lejos.hardware.motor.Motor;
 import lejos.robotics.RegulatedMotor;
 
 public class Actions {
