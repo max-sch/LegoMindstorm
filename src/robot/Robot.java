@@ -1,7 +1,5 @@
 package robot;
 
-import com.sun.prism.paint.Color;
-
 import actions.Actions;
 import behaviour.Line;
 import lejos.hardware.Button;
@@ -9,6 +7,7 @@ import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.Motor;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.SensorConstants;
 import lejos.hardware.sensor.SensorMode;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.RegulatedMotor;

@@ -1,17 +1,8 @@
 package behaviour;
 
-import lejos.hardware.motor.Motor;
-import lejos.hardware.port.SensorPort;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.NXTLightSensor;
-import lejos.hardware.sensor.SensorMode;
-import lejos.robotics.RegulatedMotor;
-
-import java.awt.image.ColorConvertOp;
-
-import com.sun.prism.paint.Color;
-
 import lejos.hardware.Button;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.robotics.RegulatedMotor;
 
 public class Line {
 
@@ -29,26 +20,35 @@ public class Line {
 	
 	public void follow() {
 		colorSensor.setFloodlight(true);
-		//colorSensor.setFloodlight(lejos.robotics.Color.RED);
-		int vr;
-		int vl;
-		float realTimeValue;
-		int kp = 100;
-		float initialValue = 50f;
 	
+		float realTimeValue;
+		float kp = 150;
+		float initialValue = 0.05f;	
+		float powerA = 0;
+		float powerB = 0;
+		float error = 0;
+		float turn = 0;
+		
 		while (true) {
-			realTimeValue = getRealTimeValue() * 100;
-			float error = realTimeValue - initialValue;
-			float turn = kp * error;
-			turn = turn/100;
-			float powerA = (initialValue +turn)*4.0f;
-			float powerB = (initialValue -turn)*4.0f;
-//			vl = (int) (160 + turn);
-//			vr = (int) (160 - turn);
-			leftMotor.backward();
-			rightMotor.backward();
+			realTimeValue = getRealTimeValue();
+		
+			if(realTimeValue < 0.1) {
+				error = (realTimeValue - initialValue)*20;
+			}
+			else {
+				error = (realTimeValue - initialValue)*3;
+			}
+			
+			turn = kp * error;
+			
+			powerA = (125 + turn);
+			powerB = (125 - turn);
+			
+			leftMotor.forward();
+			rightMotor.forward();
 			leftMotor.setSpeed((int) powerA);
 			rightMotor.setSpeed((int) powerB);
+			
 		 	if (Button.readButtons() != 0) {
 	    		break;
 	    	}
@@ -63,26 +63,7 @@ public class Line {
 		return samples[0];
 	}
 
-//	public void follow() {
-//		leftMotor.setSpeed(200);
-//		rightMotor.setSpeed(200);
-//		leftMotor.forward();
-//		rightMotor.forward();
-//		while(onLine) {
-//			if (colorSensor.getColorID() != 0) {
-//				onLine = false;
-//				leftMotor.stop();
-//				rightMotor.stop();
-//				searchAfterLineWasLost();
-//			}
-//			if (Button.readButtons() != 0) {
-//				break;
-//			}
-//		}
-//		
-//	}
-
-	public void searchAfterLineWasLost() {
+	public void searchLine() {
 	
 	}
 }

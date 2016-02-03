@@ -17,8 +17,8 @@ public class Main {
 		Line lineBehavior = robot.createNewLineBehavior();
 		lineBehavior.follow();
 		//actions.driveForward();
-//		robot.test();
-//		Button.waitForAnyPress();
+		//robot.test();
+		//Button.waitForAnyPress();
 		//robot.test2();
 		//actions.stopMotors();
 		
