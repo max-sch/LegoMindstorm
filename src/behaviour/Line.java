@@ -3,6 +3,7 @@ package behaviour;
 import lejos.hardware.Button;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.robotics.RegulatedMotor;
+import lejos.robotics.navigation.DifferentialPilot;
 
 public class Line {
 
@@ -28,12 +29,19 @@ public class Line {
 		float powerB = 0;
 		float error = 0;
 		float turn = 0;
+		int baseSpeed = 125;
 		
 		while (true) {
 			realTimeValue = getRealTimeValue();
-		
+			baseSpeed = 125;
 			if(realTimeValue < 0.1) {
 				error = (realTimeValue - initialValue)*20;
+			}
+			else if (realTimeValue > 0.5) {
+				baseSpeed = 0;
+				leftMotor.stop();
+				rightMotor.stop();
+				new DifferentialPilot(2, 2, leftMotor, rightMotor).rotate(-60);
 			}
 			else {
 				error = (realTimeValue - initialValue)*3;
@@ -41,8 +49,8 @@ public class Line {
 			
 			turn = kp * error;
 			
-			powerA = (125 + turn);
-			powerB = (125 - turn);
+			powerA = (baseSpeed + turn);
+			powerB = (baseSpeed - turn);
 			
 			leftMotor.forward();
 			rightMotor.forward();
