@@ -11,12 +11,14 @@ import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.internal.ev3.EV3Battery;
 import lejos.robotics.RegulatedMotor;
+import lejos.robotics.filter.MedianFilter;
 
 
 public class Robot {
 
 	final RegulatedMotor leftMotor = Motor.C;
 	final RegulatedMotor rightMotor = Motor.B;
+	final RegulatedMotor ultraSonicMotor = Motor.A;
 	final  EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
 	final EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S3);
 	final EV3TouchSensor leftTouchSensor = new EV3TouchSensor(SensorPort.S4);
@@ -45,6 +47,10 @@ public class Robot {
 		return this.rightMotor;
 	}
 	
+	public RegulatedMotor getUltraSonicMotor() {
+		return this.ultraSonicMotor;
+	}
+	
 	public EV3UltrasonicSensor getUltraSonicSensor() {
 		return this.ultrasonicSensor;
 	}
@@ -57,15 +63,20 @@ public class Robot {
 		return this.rightTouchSensor;
 	}
 	
+	public EV3ColorSensor getColorSensor() {
+		return this.colorSensor;
+	}
+	
 	public void test() {
 		//colorSensor.setFloodlight();
 		
 
 		while (true) {
+			//MedianFilter filter = new MedianFilter(colorSensor.getRedMode(), 10);
 			int samplesize = colorSensor.sampleSize();
 			float[] samples = new float[samplesize];
 			colorSensor.getRedMode().fetchSample(samples, 0);
-		
+			
 	    	LCD.drawString("ID =" + samples[0],0,1); 
 	    	
 	    	if (Button.readButtons() != 0) {
