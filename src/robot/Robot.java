@@ -3,27 +3,29 @@ package robot;
 import java.util.HashMap;
 
 import behaviour.BarCode;
+import behaviour.BridgeBehaviour;
 import behaviour.IBehaviour;
 import behaviour.LabyrinthBehaviour;
 import behaviour.LineBehaviour;
+import behaviour.RopeBridgeBehaviour;
 
 public class Robot implements IRobot {
 	
 	private final RobotConfiguration robotConfig;
-	private final HashMap<BarCode, IBehaviour> behaviourWithID;
+	private final  HashMap<BarCode, IBehaviour> behaviourWithID;
 	
 	public Robot(RobotConfiguration robotConfig) {
 		this.robotConfig = robotConfig;
-		this.behaviourWithID = initBehaviour();
+		this.behaviourWithID = new HashMap<>();
+		initBehaviour();
 	}
 	
-	@SuppressWarnings("serial")
-	private HashMap<BarCode, IBehaviour> initBehaviour() {
+	private void initBehaviour() {
 		// TODO has to be completed
-		return new HashMap<BarCode, IBehaviour>() {{
-			put(BarCode.LABYRINTH, new LabyrinthBehaviour(robotConfig));
-			put(BarCode.LINE, new LineBehaviour(robotConfig));
-		}};
+		this.behaviourWithID.put(BarCode.LABYRINTH, new LabyrinthBehaviour(robotConfig));
+		this.behaviourWithID.put(BarCode.LINE, new LineBehaviour(robotConfig));
+		this.behaviourWithID.put(BarCode.BRIDGE, new BridgeBehaviour(robotConfig));
+		this.behaviourWithID.put(BarCode.ROPEBRIDGE, new RopeBridgeBehaviour(robotConfig));
 	}
 
 	@Override
