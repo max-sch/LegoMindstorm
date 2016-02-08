@@ -1,11 +1,11 @@
-package behaviour;
+package test;
 
 import lejos.hardware.Button;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.utility.PilotProps;
-import robot.Robot;
+import robot.RobotConfiguration;
 
 public class Labyrinth {
 	
@@ -15,7 +15,7 @@ public class Labyrinth {
 	private final RegulatedMotor rightMotor;
 	private final EV3UltrasonicSensor ultraSonicSensor;
 	
-	public Labyrinth(Robot robotConf) {
+	public Labyrinth(RobotConfiguration robotConf) {
 		this.leftMotor = robotConf.getLeftMotor();
 		this.rightMotor = robotConf.getRightMotor();
 		this.ultraSonicSensor = robotConf.getUltraSonicSensor();

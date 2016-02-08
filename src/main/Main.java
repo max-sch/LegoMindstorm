@@ -1,26 +1,23 @@
 package main;
 
+import behaviour.BarCode;
 import lejos.hardware.Button;
+import robot.IRobot;
 import robot.Robot;
+import robot.RobotConfiguration;
 
 public class Main {
 
 	public static void main(String[] args) {
-		Robot robot = new Robot();
-		robot.initializeMotors();
-		//Actions actions = robot.createActions();
+		RobotConfiguration robotConfig = new RobotConfiguration();
+		robotConfig.initializeMotors();
+		
+		IRobot robot = new Robot(robotConfig);
+		
 		Button.LEDPattern(6);
 		Button.waitForAnyPress();
-		//Line lineBehavior = robot.createNewLineBehavior();
-		//lineBehavior.follow();
-		//actions.driveForward();
-		//robot.test();
-		//Button.waitForAnyPress();
-		//robot.test2();
-		//actions.stopMotors();
-		robot.testUltraSonic();
 		
-		
+		robot.passObstacleWithBarCode(BarCode.LABYRINTH);
 	}
 
 }

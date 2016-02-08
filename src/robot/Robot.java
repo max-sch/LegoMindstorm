@@ -1,123 +1,50 @@
 package robot;
 
-import actions.Actions;
-import behaviour.Line;
-import lejos.hardware.Button;
-import lejos.hardware.lcd.LCD;
-import lejos.hardware.motor.Motor;
-import lejos.hardware.port.SensorPort;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.EV3TouchSensor;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.internal.ev3.EV3Battery;
-import lejos.robotics.RegulatedMotor;
-import lejos.robotics.filter.MedianFilter;
+import java.util.HashMap;
 
+import behaviour.BarCode;
+import behaviour.IBehaviour;
+import behaviour.LabyrinthBehaviour;
+import behaviour.LineBehaviour;
 
-public class Robot {
-
-	final RegulatedMotor leftMotor = Motor.C;
-	final RegulatedMotor rightMotor = Motor.B;
-	final RegulatedMotor ultraSonicMotor = Motor.A;
-	final  EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
-	final EV3UltrasonicSensor ultrasonicSensor = new EV3UltrasonicSensor(SensorPort.S3);
-	final EV3TouchSensor leftTouchSensor = new EV3TouchSensor(SensorPort.S4);
-	final EV3TouchSensor rightTouchSensor = new EV3TouchSensor(SensorPort.S1);
+public class Robot implements IRobot {
 	
-	public void initializeMotors() {
-		leftMotor.resetTachoCount();
-		rightMotor.resetTachoCount();
-		leftMotor.rotateTo(0);
-		rightMotor.rotateTo(0);
-		leftMotor.setSpeed(400);
-		rightMotor.setSpeed(400);
-		leftMotor.setAcceleration(800);
-		rightMotor.setAcceleration(800);
+	private final RobotConfiguration robotConfig;
+	private final HashMap<BarCode, IBehaviour> behaviourWithID;
+	
+	public Robot(RobotConfiguration robotConfig) {
+		this.robotConfig = robotConfig;
+		this.behaviourWithID = initBehaviour();
+	}
+	
+	@SuppressWarnings("serial")
+	private HashMap<BarCode, IBehaviour> initBehaviour() {
+		// TODO has to be completed
+		return new HashMap<BarCode, IBehaviour>() {{
+			put(BarCode.LABYRINTH, new LabyrinthBehaviour(robotConfig));
+			put(BarCode.LINE, new LineBehaviour(robotConfig));
+		}};
 	}
 
-	public Actions createActions() {
-		return new Actions(rightMotor, leftMotor);
-	}
-	
-	public RegulatedMotor getLeftMotor() {
-		return this.leftMotor;
-	}
-	
-	public RegulatedMotor getRightMotor() {
-		return this.rightMotor;
-	}
-	
-	public RegulatedMotor getUltraSonicMotor() {
-		return this.ultraSonicMotor;
-	}
-	
-	public EV3UltrasonicSensor getUltraSonicSensor() {
-		return this.ultrasonicSensor;
-	}
-	
-	public EV3TouchSensor getLeftTouchSensor() {
-		return this.leftTouchSensor;
-	}
-	
-	public EV3TouchSensor getRightTouchSensor() {
-		return this.rightTouchSensor;
-	}
-	
-	public EV3ColorSensor getColorSensor() {
-		return this.colorSensor;
-	}
-	
-	public void test() {
-		//colorSensor.setFloodlight();
+	@Override
+	public void passParkour() {
+		BarCode code = BarCode.LABYRINTH;
 		
-
-		while (true) {
-			//MedianFilter filter = new MedianFilter(colorSensor.getRedMode(), 10);
-			int samplesize = colorSensor.sampleSize();
-			float[] samples = new float[samplesize];
-			colorSensor.getRedMode().fetchSample(samples, 0);
-			
-	    	LCD.drawString("ID =" + samples[0],0,1); 
-	    	
-	    	if (Button.readButtons() != 0) {
-	    		break;
-	    	}
+		while (!code.equals(BarCode.FINISH)) {
+			code = this.behaviourWithID.get(code).passObstacle();
 		}
-	}
-	
-	public void test2() {
-		colorSensor.setFloodlight(false);
-	}
-	
-	public void testLabySensors() {
-		while (true) {
-			int samplesize = this.leftTouchSensor.sampleSize();
-			float[] samples = new float[samplesize];
-			this.leftTouchSensor.fetchSample(samples, 0);
-			
-			LCD.drawString("ID =" + samples[0],0,1); 
-	    	
-	    	if (Button.readButtons() != 0) {
-	    		break;
-	    	}
-		}
-	}
-	
-	public void testUltraSonic() {
-		while (true) {
-			int samplesize = this.ultrasonicSensor.sampleSize();
-			float[] samples = new float[samplesize];
-			this.ultrasonicSensor.fetchSample(samples, 0);
 		
-	    	LCD.drawString("Val =" + samples[0],0,1); 
-	    	
-	    	if (Button.readButtons() != 0) {
-	    		break;
-	    	}
-		}
+		this.behaviourWithID.get(code).passObstacle();
 	}
-	
-	public Line createNewLineBehavior() {
-		return new Line (rightMotor, leftMotor, colorSensor);
+
+	@Override
+	public void startRace() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void passObstacleWithBarCode(BarCode code) {
+		this.behaviourWithID.get(code).passObstacle();
 	}
 }

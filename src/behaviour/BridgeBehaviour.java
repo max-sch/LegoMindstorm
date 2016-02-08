@@ -6,13 +6,10 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.robotics.RegulatedMotor;
-import lejos.robotics.SampleProvider;
-import lejos.robotics.filter.MedianFilter;
-import lejos.robotics.navigation.DifferentialPilot;
 import lejos.utility.Delay;
-import robot.Robot;
+import robot.RobotConfiguration;
 
-public class Bridge {
+public class BridgeBehaviour implements IBehaviour {
 
 	private final RegulatedMotor leftMotor;
 	private final RegulatedMotor rightMotor;
@@ -20,23 +17,21 @@ public class Bridge {
 	private final EV3ColorSensor colorSensor;
 	private final RegulatedMotor ultraSonicMotor;
 	private final EV3TouchSensor rightTouchSensor;
-	private final MedianFilter filter;
 	private float currentDistance;
 	
 	private final static float minDistance = 0.2f;
 	
-	public Bridge(Robot robotConf) {
+	public BridgeBehaviour(RobotConfiguration robotConf) {
 		this.leftMotor = robotConf.getLeftMotor();
 		this.rightMotor = robotConf.getRightMotor();
 		this.ultraSonicSensor = robotConf.getUltraSonicSensor();
 		this.colorSensor = robotConf.getColorSensor();
 		this.ultraSonicMotor = robotConf.getUltraSonicMotor();
 		this.rightTouchSensor = robotConf.getRightTouchSensor();
-		SampleProvider provider = this.ultraSonicSensor.getDistanceMode();
-		this.filter = new MedianFilter(provider, 10);
 	}
 	
-	public void passBridge() {
+	@Override
+	public BarCode passObstacle() {
 		ultraSonicMotor.rotate(-60);
 		Delay.msDelay(500);
 		
@@ -50,6 +45,9 @@ public class Bridge {
 		}
 		
 		this.ultraSonicMotor.rotate(60);
+		
+		//Has to be adapted
+		return BarCode.FINISH;
 	}
 	
 	private void followRightEdge() {
