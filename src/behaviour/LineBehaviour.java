@@ -56,7 +56,6 @@ public class LineBehaviour implements IBehaviour {
 			rightMotor.setSpeed((int) powerB);
 		 	if (Button.readButtons() != 0) {
 		 		barCounter.interrupt();
-		 		System.out.println("Bars:"+ barsCounted);
 		 		Button.waitForAnyPress();
 	    		break;
 	    	}
