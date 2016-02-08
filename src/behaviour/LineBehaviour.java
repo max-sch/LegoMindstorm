@@ -6,6 +6,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.filter.MedianFilter;
+import lejos.robotics.navigation.DifferentialPilot;
 import robot.RobotConfiguration;
 
 public class LineBehaviour implements IBehaviour {
@@ -15,6 +16,8 @@ public class LineBehaviour implements IBehaviour {
 	RegulatedMotor rightMotor;
 	MedianFilter filter;
 	private int barsCounted = 0;
+	private boolean followLine = true;
+	private BarCounterThread barCounter;
 	
 	public LineBehaviour(RobotConfiguration robotConfig) {
 		this.rightMotor = robotConfig.getRightMotor();
@@ -36,9 +39,9 @@ public class LineBehaviour implements IBehaviour {
 		float error = 0;
 		float turn = 0;
 		int baseSpeed = 125;
-		BarCounterThread barCounter = new BarCounterThread(this, colorSensor);
+		barCounter = new BarCounterThread(this, colorSensor);
 		barCounter.start();
-		while (true) {
+		while (followLine) {
 			realTimeValue = getRealTimeValue();
 			baseSpeed = 220;
 			if(realTimeValue < 0.1) {
@@ -60,7 +63,8 @@ public class LineBehaviour implements IBehaviour {
 	    		break;
 	    	}
 		}
-		
+		leftMotor.stop();
+		rightMotor.stop();
 		// TODO has to be adapted
 		return BarCode.FINISH;
 	}
@@ -72,6 +76,41 @@ public class LineBehaviour implements IBehaviour {
 		return samples[0];
 	}
 
+	public void stopFollowLine() {
+		followLine = false;
+	}
+	
+	public void checkIfSharpCorner() {
+		boolean isSharpCorner = false;
+		int performedRotation = 0;
+		DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
+		if (getRealTimeValue() > 0.2) {
+			pilot.rotate(-2);
+			isSharpCorner = true;
+			barCounter.isSharpCorner();
+			followLine = true;
+		} else {
+			for (int i = 0;  i<= 3 ; i++) {
+				pilot.rotate(2);	
+				performedRotation += 2;
+				if (getRealTimeValue() > 0.05) {
+					isSharpCorner = true;
+					barCounter.isSharpCorner();
+					followLine = true;
+					break;
+				}
+			 	if (Button.readButtons() != 0) {
+		    		break;
+		    	}
+			}
+			if (!isSharpCorner) {
+				pilot.rotate(-performedRotation);
+				pilot.rotate(-20);
+				barCounter.setIsNoSharpCorner();
+			} 
+		}
+	}
+	
 	public void barFound() {
 		barsCounted++;
 		Sound.buzz();
