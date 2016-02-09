@@ -43,10 +43,12 @@ public class SensorTest {
 	}
 	
 	public static void testUltraSonic(EV3UltrasonicSensor ultraSonicSensor) {
+		SampleProvider provider = ultraSonicSensor.getDistanceMode();
+		MedianFilter filter = new MedianFilter(provider, 10);
 		while (true) {
-			int samplesize = ultraSonicSensor.sampleSize();
+			int samplesize = filter.sampleSize();
 			float[] samples = new float[samplesize];
-			ultraSonicSensor.fetchSample(samples, 0);
+			filter.fetchSample(samples, 0);
 		
 	    	LCD.drawString("Val =" + samples[0],0,1); 
 	    	

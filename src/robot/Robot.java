@@ -7,6 +7,7 @@ import behaviour.BridgeBehaviour;
 import behaviour.IBehaviour;
 import behaviour.LabyrinthBehaviour;
 import behaviour.LineBehaviour;
+import behaviour.RollingFieldBehaviour;
 import behaviour.RopeBridgeBehaviour;
 
 public class Robot implements IRobot {
@@ -26,6 +27,7 @@ public class Robot implements IRobot {
 		this.behaviourWithID.put(BarCode.LINE, new LineBehaviour(robotConfig));
 		this.behaviourWithID.put(BarCode.BRIDGE, new BridgeBehaviour(robotConfig));
 		this.behaviourWithID.put(BarCode.ROPEBRIDGE, new RopeBridgeBehaviour(robotConfig));
+		this.behaviourWithID.put(BarCode.ROLLINGFIELD, new RollingFieldBehaviour(robotConfig));
 	}
 
 	@Override

@@ -5,5 +5,6 @@ public enum BarCode {
 	LINE,
 	BRIDGE,
 	ROPEBRIDGE,
+	ROLLINGFIELD,
 	FINISH
 }
