@@ -60,11 +60,11 @@ public class BridgeBehaviour implements IBehaviour {
 		
 		driveToOptimalPosition();
 		
-//		try {
-//			handleElevator();
-//		} catch (IOException e) {
-//			LCD.drawString("Error", 0, 1);
-//		}
+		try {
+			handleElevator();
+		} catch (IOException e) {
+			LCD.drawString("Error", 0, 1);
+		}
 			
 		this.ultraSonicMotor.rotate(90);
 		
@@ -159,15 +159,7 @@ public class BridgeBehaviour implements IBehaviour {
 //		float currentDistance;
 		pilot.stop();
 		
-//		for (int i = 0; i < 25; i++) {
-//			pilot.rotate(-1);
-//			currentDistance = getDistanceToGround();
-//			if (currentDistance > 0.1f) {
-//				break;
-//			}
-//		}
-		
-		pilot.rotate(40);
+		pilot.rotate(45);
 		pilot.forward();
 		
 		Delay.msDelay(1000);
@@ -209,8 +201,8 @@ public class BridgeBehaviour implements IBehaviour {
 			error = minDistance - currentDistance;
 			
 		    if ( error < 0) {
-				kp = 800;
-				rkp = 600;
+				kp = 500;
+				rkp = 300;
 			} else {
 				kp = 200;//300
 				rkp = kp;
@@ -246,8 +238,8 @@ public class BridgeBehaviour implements IBehaviour {
 	}
 
 	private void findRightEdge() {
-		this.rightMotor.setSpeed(293);
-		this.leftMotor.setSpeed(300);
+		this.rightMotor.setSpeed(193);
+		this.leftMotor.setSpeed(200);
 		this.leftMotor.forward();
 		this.rightMotor.forward();
 		
