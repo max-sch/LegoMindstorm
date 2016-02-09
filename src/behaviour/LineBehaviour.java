@@ -15,15 +15,14 @@ public class LineBehaviour implements IBehaviour {
 	RegulatedMotor leftMotor;
 	RegulatedMotor rightMotor;
 	MedianFilter filter;
-	private int barsCounted = 0;
 	private boolean followLine = true;
 	private BarCounterThread barCounter;
+	boolean isSharpCorner = false;
 	
 	public LineBehaviour(RobotConfiguration robotConfig) {
 		this.rightMotor = robotConfig.getRightMotor();
 		this.leftMotor = robotConfig.getLeftMotor();
 		this.colorSensor = robotConfig.getColorSensor();
-		
 		SampleProvider light = colorSensor.getMode("Red");
 		filter = new MedianFilter(light, 10);
 	}	
@@ -39,7 +38,7 @@ public class LineBehaviour implements IBehaviour {
 		float error = 0;
 		float turn = 0;
 		int baseSpeed = 125;
-		barCounter = new BarCounterThread(this, colorSensor);
+		barCounter = new BarCounterThread(leftMotor, rightMotor, this, colorSensor);
 		barCounter.start();
 		while (followLine) {
 			realTimeValue = getRealTimeValue();
@@ -63,10 +62,30 @@ public class LineBehaviour implements IBehaviour {
 	    		break;
 	    	}
 		}
-		leftMotor.stop();
 		rightMotor.stop();
+		leftMotor.stop();
 		// TODO has to be adapted
 		return BarCode.FINISH;
+	}
+	
+	public void driveForwardToScanBarCode() {
+		leftMotor.setSpeed(220);
+		rightMotor.setSpeed(220);
+		leftMotor.forward();
+		rightMotor.forward();
+	}
+	
+	public void stopDrivingForward() {
+		DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
+		pilot.stop();
+	}
+	
+	public void stopFollowLine() {
+		followLine = false;
+	}
+	
+	public void keepFollowLine() {
+		followLine = true;
 	}
 	
 	public float getRealTimeValue() {
@@ -74,45 +93,5 @@ public class LineBehaviour implements IBehaviour {
 		float[] samples = new float[samplesize];
 		filter.fetchSample(samples, 0);
 		return samples[0];
-	}
-
-	public void stopFollowLine() {
-		followLine = false;
-	}
-	
-	public void checkIfSharpCorner() {
-		boolean isSharpCorner = false;
-		int performedRotation = 0;
-		DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
-		if (getRealTimeValue() > 0.2) {
-			pilot.rotate(-2);
-			isSharpCorner = true;
-			barCounter.isSharpCorner();
-			followLine = true;
-		} else {
-			for (int i = 0;  i<= 3 ; i++) {
-				pilot.rotate(2);	
-				performedRotation += 2;
-				if (getRealTimeValue() > 0.05) {
-					isSharpCorner = true;
-					barCounter.isSharpCorner();
-					followLine = true;
-					break;
-				}
-			 	if (Button.readButtons() != 0) {
-		    		break;
-		    	}
-			}
-			if (!isSharpCorner) {
-				pilot.rotate(-performedRotation);
-				pilot.rotate(-20);
-				barCounter.setIsNoSharpCorner();
-			} 
-		}
-	}
-	
-	public void barFound() {
-		barsCounted++;
-		Sound.buzz();
 	}
 }

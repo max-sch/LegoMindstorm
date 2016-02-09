@@ -2,15 +2,19 @@ package behaviour;
 
 import javax.swing.colorchooser.ColorSelectionModel;
 
+import javafx.scene.shape.Line;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.robotics.RegulatedMotor;
 import lejos.robotics.SampleProvider;
 import lejos.robotics.filter.MedianFilter;
 import lejos.utility.Delay;
 
 public class BarCounterThread extends Thread {
 
+	private CheckIfSharpCornerThread checkerThread;
+	final int gapBetweenLineAndBarCode = 1200;
 	private MedianFilter filter;
 	private LineBehaviour lineBehaviour;
 	boolean firstLow = false;
@@ -18,17 +22,25 @@ public class BarCounterThread extends Thread {
 	boolean barCodeComplete = false;
 	float realTimeValue;
 	long elapsedTime = 0;
-	long elapsedTimeSinceLineWasLost = 0;
+	long timeOfBarCount = 0;
 	long startTime = 0;
+	boolean white = false;
 	int counter = 0;
-	int upperBound = 600;
-	int lowerBound = 150;
-	private boolean isSharpCorner = true;
+	int lowerBound = 350;
+	private boolean isSharpCorner = false;
+	boolean checkSharpCornerComplete = false;
+	RegulatedMotor leftMotor;
+	RegulatedMotor rightMotor;
+	EV3ColorSensor colorSensor;
 
-	public BarCounterThread(LineBehaviour line, EV3ColorSensor colorSensor) {
+	public BarCounterThread(RegulatedMotor leftMotor, RegulatedMotor rightMotor, LineBehaviour line,
+			EV3ColorSensor colorSensor) {
 		this.lineBehaviour = line;
+		this.colorSensor = colorSensor;
+		this.leftMotor = leftMotor;
+		this.rightMotor = rightMotor;
 		SampleProvider light = colorSensor.getMode("Red");
-		filter = new MedianFilter(light, 10);
+		filter = new MedianFilter(light, 4);
 	}
 
 	@Override
@@ -39,95 +51,67 @@ public class BarCounterThread extends Thread {
 			} else {
 				countBarCode();
 				checkIfBarCodeIsFinished();
-				startBehaviorIfBarCodeComplete();
+				if (barCodeComplete) {
+					stopDrivingForward();
+					startBehaviorAccordingToBarCode();
+				}
 			}
 			if (Button.readButtons() != 0) {
-	    		this.interrupt();
-	    	}
+				stopFollowingLine();
+				stopDrivingForward();
+				this.interrupt();
+			}
 		}
 	}
 
 	private void checkIfBarCodeStarts() {
 		realTimeValue = getRealTimeValue();
-		if (realTimeValue < 0.02) {
+		if (realTimeValue < 0.1) {
 			countElapsedTime();
 		} else {
 			restartElapsedTimeCounting();
 		}
-		if (elapsedTime >= 1500) {
-			stopFollowingLine();
+		if (elapsedTime >= gapBetweenLineAndBarCode) {
 			checkIfSharpLeftCorner();
-			keepFollowingLineIfSharpCorner();
-			startBarCodeCountingIfNoSharpCorner();
-		}
-	}
-
-	public void countBarCode() {
-		realTimeValue = getRealTimeValue();
-		if (realTimeValue < 0.1) {
-			countElapsedTime();
-		} else if (firstLow) {
-			firstLow = false;
-			if (elapsedTime > lowerBound && elapsedTime < upperBound) {
-				counter++;
+			synchronized (checkerThread) {
+				try {
+					checkerThread.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if (isSharpCorner) {
+					keepFollowingLine();
+				} else {
+					stopFollowingLine();
+					startBarCodeCounting();
+					driveForwardToScanBarCode();
+				}
 			}
 		}
 	}
-
+	
 	private void checkIfBarCodeIsFinished() {
-		if (elapsedTime >= 2000) {
+		if (realTimeValue < 0.12) {
+			countElapsedTime(); 
+		} else {
+			firstLow = false;
+		}
+		if (elapsedTime > gapBetweenLineAndBarCode) {
 			stopBarCodeCounting();
 			barCodeComplete = true;
 		}
 	}
 
-	private void checkIfSharpLeftCorner() {
-		lineBehaviour.checkIfSharpCorner();
-	}
-
-	private void keepFollowingLineIfSharpCorner() {
-		if (isSharpCorner) {
-			elapsedTime = 0;
-			lineBehaviour.passObstacle();
-		}	
-	}
-	
-	public void isSharpCorner() {
-		isSharpCorner = true;
-		elapsedTime = 0;
-	}
-
-	public void setIsNoSharpCorner() {
-		isSharpCorner = false;
-	}
-
-	private void startBehaviorIfBarCodeComplete() {
-		if (barCodeComplete) {
-			barCodeComplete = false;
-			// start Behavior
-			counter = 0;
+	public void countBarCode() {
+		realTimeValue = getRealTimeValue();
+		if (realTimeValue > 0.3) {
+			white = true;
+		} else if (realTimeValue < 0.1) {
+			if (white) {
+				white = false;
+				counter++;
+			}
 		}
-	}
-
-	private void restartElapsedTimeCounting() {
-		firstLow = false;
-	}
-
-	private void startBarCodeCountingIfNoSharpCorner() {
-		if (!isSharpCorner) {
-			isSharpCorner = true;
-			elapsedTime = 0;
-			isCountingBars = true;
-		}
-	}
-
-	private void stopBarCodeCounting() {
-		elapsedTime = 0;
-		isCountingBars = false;
-	}
-
-	private void stopFollowingLine() {
-		lineBehaviour.stopFollowLine();
 	}
 
 	public void countElapsedTime() {
@@ -139,10 +123,74 @@ public class BarCounterThread extends Thread {
 		}
 	}
 
+	private void checkIfSharpLeftCorner() {
+		lineBehaviour.stopFollowLine();
+		checkerThread = new CheckIfSharpCornerThread(this, leftMotor, rightMotor, colorSensor);
+		checkerThread.start();
+	}
+
+	private void keepFollowingLine() {
+		elapsedTime = 0;
+		lineBehaviour.keepFollowLine();
+		lineBehaviour.passObstacle();
+		isSharpCorner = false;
+	}
+
+	public void isSharpCorner() {
+		firstLow = false;
+		isSharpCorner = true;
+		elapsedTime = 0;
+	}
+
+	public void setIsNoSharpCorner() {
+		firstLow = false;
+		isSharpCorner = false;
+		elapsedTime = 0;
+	}
+
+	private void startBehaviorAccordingToBarCode() {
+		System.out.println("Bars" + counter);
+		Button.waitForAnyPress();
+		barCodeComplete = false;
+		counter = 0;
+		//test
+		stopFollowingLine();
+		stopDrivingForward();
+		this.interrupt();
+	}
+
+	private void restartElapsedTimeCounting() {
+		firstLow = false;
+	}
+
+	private void driveForwardToScanBarCode() {
+		lineBehaviour.driveForwardToScanBarCode();
+	}
+
+	private void stopDrivingForward() {
+		lineBehaviour.stopDrivingForward();
+	}
+
+	private void startBarCodeCounting() {
+		firstLow = false;
+		elapsedTime = 0;
+		isCountingBars = true;
+	}
+
+	private void stopBarCodeCounting() {
+		firstLow = false;
+		elapsedTime = 0;
+		isCountingBars = false;
+	}
+
+	private void stopFollowingLine() {
+		lineBehaviour.stopFollowLine();
+	}
+
 	public float getRealTimeValue() {
 		int samplesize = filter.sampleSize();
 		float[] samples = new float[samplesize];
 		filter.fetchSample(samples, 0);
-		return samples[0];
+		return (samples[0]*1.25f);
 	}
 }
