@@ -8,7 +8,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.utility.Delay;
 import robot.RobotConfiguration;
 
-public class LabyrinthBehaviour implements IBehaviour{
+public class LabyrinthBehaviour extends IBehaviour{
 
 	private final RegulatedMotor leftMotor;
 	private final RegulatedMotor rightMotor;
@@ -37,7 +37,7 @@ public class LabyrinthBehaviour implements IBehaviour{
 		this.leftMotor.forward();
 		this.rightMotor.forward();
 		
-		while (true) {
+		while (!lineFound) {
 			currentDistance = getDistanceToWall();
 			if (currentDistance <= minDistToWall) {
 				turn = 100 - (5 - (currentDistance*100));
@@ -76,6 +76,8 @@ public class LabyrinthBehaviour implements IBehaviour{
 				break;
 			}
 		}
+		
+		new DifferentialPilot(2, 10, leftMotor, rightMotor).stop();
 		
 		//Has to be adapted
 		return BarCode.FINISH;

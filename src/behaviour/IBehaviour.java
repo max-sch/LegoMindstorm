@@ -1,5 +1,11 @@
 package behaviour;
 
-public interface IBehaviour {
+public abstract class IBehaviour {
+	protected static boolean lineFound = false;
+	
+	public static void setLineFound(boolean value) {
+		lineFound = value;
+	}
+	
 	public abstract BarCode passObstacle();
 }

@@ -18,7 +18,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.utility.Delay;
 import robot.RobotConfiguration;
 
-public class BridgeBehaviour implements IBehaviour {
+public class BridgeBehaviour extends IBehaviour {
 
 	private final RegulatedMotor leftMotor;
 	private final RegulatedMotor rightMotor;
@@ -52,10 +52,16 @@ public class BridgeBehaviour implements IBehaviour {
 	
 	@Override
 	public BarCode passObstacle() {
-		ultraSonicMotor.rotate(-90);
+		ultraSonicMotor.rotate(-75);
 		Delay.msDelay(500);
 		
+		DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
+		pilot.forward();
+		Delay.msDelay(1000);
+		pilot.stop();
+		
 		findRightEdge();
+		
 		followRightEdge();
 		
 		driveToOptimalPosition();
@@ -66,7 +72,7 @@ public class BridgeBehaviour implements IBehaviour {
 			LCD.drawString("Error", 0, 1);
 		}
 			
-		this.ultraSonicMotor.rotate(90);
+		this.ultraSonicMotor.rotate(-75);
 		
 		//Has to be adapted
 		return BarCode.FINISH;
@@ -92,7 +98,7 @@ public class BridgeBehaviour implements IBehaviour {
 		
 		Delay.msDelay(5000);
 		
-		leaveElevator(pilot);
+		//leaveElevator(pilot);
 	}
 	
 	private void leaveElevator(DifferentialPilot pilot) {
@@ -112,6 +118,8 @@ public class BridgeBehaviour implements IBehaviour {
 	}
 
 	private void driveIntoElevator(DifferentialPilot pilot) {
+		this.ultraSonicMotor.rotate(150);
+		
 		pilot.forward();
 		
 		while (!sensorsTouched()) {
@@ -245,7 +253,7 @@ public class BridgeBehaviour implements IBehaviour {
 		
 		currentDistance = getDistanceToGround();
 		//LCD.drawString("val: " + currentDistance, 0, 1);
-		while (currentDistance < minDistance) {
+		while (currentDistance < 0.07f) {
 			currentDistance = getDistanceToGround();
 			
 			if (Button.readButtons() != 0) {

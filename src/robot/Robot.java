@@ -3,10 +3,12 @@ package robot;
 import java.util.HashMap;
 
 import behaviour.BarCode;
+import behaviour.BarCodeScanner;
 import behaviour.BridgeBehaviour;
 import behaviour.IBehaviour;
 import behaviour.LabyrinthBehaviour;
 import behaviour.LineBehaviour;
+import behaviour.LineScanner;
 import behaviour.RollingFieldBehaviour;
 import behaviour.RopeBridgeBehaviour;
 
@@ -14,10 +16,12 @@ public class Robot implements IRobot {
 	
 	private final RobotConfiguration robotConfig;
 	private final  HashMap<BarCode, IBehaviour> behaviourWithID;
+	private final BarCodeScanner codeScanner;
 	
 	public Robot(RobotConfiguration robotConfig) {
 		this.robotConfig = robotConfig;
 		this.behaviourWithID = new HashMap<>();
+		this.codeScanner = new BarCodeScanner(robotConfig);
 		initBehaviour();
 	}
 	
@@ -32,13 +36,34 @@ public class Robot implements IRobot {
 
 	@Override
 	public void passParkour() {
-		BarCode code = BarCode.LABYRINTH;
+		BarCode code = this.codeScanner.scan();
+		LineScanner scanner = null;
+//		boolean bool = true;
 		
 		while (!code.equals(BarCode.FINISH)) {
-			code = this.behaviourWithID.get(code).passObstacle();
+			
+			if (!code.equals(BarCode.LINE)) {
+				scanner = new LineScanner(robotConfig.getColorSensor());
+				scanner.start();
+			}
+			
+//			if(bool  && code.equals(BarCode.LINE)) {
+//				code = BarCode.BRIDGE;
+//				bool = false;
+//			}
+			
+			this.behaviourWithID.get(code).passObstacle();
+			code = this.codeScanner.scan();
+			
+			if (scanner != null) {
+				if (scanner.isAlive()) {
+					scanner.interrupt();
+				}
+				scanner = null;
+			}
 		}
 		
-		this.behaviourWithID.get(code).passObstacle();
+		this.behaviourWithID.get(BarCode.LABYRINTH).passObstacle();
 	}
 
 	@Override
@@ -49,6 +74,21 @@ public class Robot implements IRobot {
 
 	@Override
 	public void passObstacleWithBarCode(BarCode code) {
+		LineScanner scanner = null;
+		
+		if (!code.equals(BarCode.LINE)) {
+			scanner = new LineScanner(robotConfig.getColorSensor());
+			scanner.start();
+		}
+		
 		this.behaviourWithID.get(code).passObstacle();
+		
+		if (scanner != null) {
+			if (scanner.isAlive()) {
+				scanner.interrupt();
+			}
+		}
+		
+		IBehaviour.setLineFound(false);
 	}
 }

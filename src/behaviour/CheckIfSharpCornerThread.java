@@ -16,12 +16,12 @@ public class CheckIfSharpCornerThread extends Thread {
 	boolean isSharpCorner = false;
 	RegulatedMotor leftMotor;
 	RegulatedMotor rightMotor;
-	BarCounterThread counter;
+	LineBehaviour line;
 	EV3ColorSensor colorSensor;
 
-	public CheckIfSharpCornerThread(BarCounterThread counter, RegulatedMotor leftMotor, RegulatedMotor rightMotor,
+	public CheckIfSharpCornerThread(LineBehaviour line, RegulatedMotor leftMotor, RegulatedMotor rightMotor,
 			EV3ColorSensor colorSensor) {
-		this.counter = counter;
+		this.line = line;
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
 		this.colorSensor = colorSensor;
@@ -44,18 +44,16 @@ public class CheckIfSharpCornerThread extends Thread {
 		int performedRotation = 0;
 		DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
 		if (getRealTimeValue() >= 0.1) {
-			Sound.beep();
 			pilot.rotate(-4);
 			isSharpCorner = true;
-			tellBarCounterThreadIsSharpCorner();
+			tellLineBehaviorIsSharpCorner();
 		} else {
-			for (int i = 0; i <= 20; i++) {
+			for (int i = 0; i <= 40; i++) {
 				pilot.rotate(1);
 				performedRotation += 1;
 				if (getRealTimeValue() >= 0.1) {
-					Sound.beep();
 					isSharpCorner = true;
-					tellBarCounterThreadIsSharpCorner();
+					tellLineBehaviorIsSharpCorner();
 					break;
 				}
 				if (Button.readButtons() != 0) {
@@ -65,12 +63,12 @@ public class CheckIfSharpCornerThread extends Thread {
 		}
 		if (!isSharpCorner) {
 			align(pilot, performedRotation);
-			counter.setIsNoSharpCorner();
+			line.setIsNoSharpCorner();
 		}
 	}
 
-	private void tellBarCounterThreadIsSharpCorner() {
-		counter.isSharpCorner();
+	private void tellLineBehaviorIsSharpCorner() {
+		line.isSharpCorner();
 	}
 
 	private void align(DifferentialPilot pilot, int performedRotation) {
@@ -85,7 +83,7 @@ public class CheckIfSharpCornerThread extends Thread {
 //		System.out.println("Value:"+counter.getRealTimeValue());
 //		Button.waitForAnyPress();
 //		System.out.flush();
-		return counter.getRealTimeValue();
+		return line.getRealTimeValue();
 //		return samples[0];
 	}
 }

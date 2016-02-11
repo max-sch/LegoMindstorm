@@ -1,17 +1,22 @@
 package behaviour;
 
+import com.sun.org.apache.bcel.internal.generic.ISHL;
+
 import lejos.hardware.Button;
 import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.robotics.RegulatedMotor;
+import lejos.robotics.navigation.DifferentialPilot;
 import lejos.utility.Delay;
 import robot.RobotConfiguration;
 
-public class RollingFieldBehaviour implements IBehaviour {
+public class RollingFieldBehaviour extends IBehaviour {
 
 	private final RegulatedMotor rightMotor;
 	private final RegulatedMotor leftMotor;
 	private final EV3UltrasonicSensor ultraSonicSensor;
+	private final EV3TouchSensor rightTouchSensor;
 	private final EV3ColorSensor colorSensor;
 	
 	private final static int baseSpeed = 400;
@@ -23,6 +28,7 @@ public class RollingFieldBehaviour implements IBehaviour {
 		this.rightMotor = robotConfig.getRightMotor();
 		this.leftMotor = robotConfig.getLeftMotor();
 		this.ultraSonicSensor = robotConfig.getUltraSonicSensor();
+		this.rightTouchSensor = robotConfig.getRightTouchSensor();
 		this.colorSensor = robotConfig.getColorSensor();
 	}
 	
@@ -39,7 +45,7 @@ public class RollingFieldBehaviour implements IBehaviour {
 		
 		Delay.msDelay(1000);
 		
-		while (true) {
+		while (!lineFound) {
 			currentDistance = getDistanceToWall();
 			if (currentDistance <= minDistToWall) {
 				turn = 100 - (5 - (currentDistance*100));
@@ -70,13 +76,35 @@ public class RollingFieldBehaviour implements IBehaviour {
 				this.rightMotor.forward();
 			}
 			
+			if (isTouched()) {
+				DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
+				pilot.stop();
+				pilot.backward();
+				Delay.msDelay(1000);
+				
+				pilot.rotate(90);
+				pilot.forward();
+				
+				Delay.msDelay(1000);
+				break;
+			}
+			
 			if (Button.readButtons() != 0) {
 				break;
 			}
 		
 		}
 		
+		new DifferentialPilot(2, 10, leftMotor, rightMotor).stop();
+		
 		return BarCode.LINE;
+	}
+	
+	private boolean isTouched() {
+		int sampleSize = this.rightTouchSensor.sampleSize();
+		float[] samples = new float[sampleSize];
+		this.rightTouchSensor.fetchSample(samples, 0);
+		return samples[0] == 1;
 	}
 		
 	private void onRev(int Speed, boolean isRightMotor) {

@@ -13,7 +13,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 import lejos.utility.Delay;
 import robot.RobotConfiguration;
 
-public class RopeBridgeBehaviour implements IBehaviour {
+public class RopeBridgeBehaviour extends IBehaviour {
 
 	private final RegulatedMotor rightMotor;
 	private final RegulatedMotor leftMotor;
@@ -94,8 +94,7 @@ public class RopeBridgeBehaviour implements IBehaviour {
 		
 		ultraSonicMotor.rotate(80);
 		
-		this.leftMotor.stop();
-		this.rightMotor.stop();
+		new DifferentialPilot(2, 10, leftMotor, rightMotor).stop();
 		
 //		this.leftMotor.setSpeed(0);
 //		this.rightMotor.setSpeed(0);
@@ -142,7 +141,7 @@ public class RopeBridgeBehaviour implements IBehaviour {
 	private void rotateOptimal() {
 		DifferentialPilot pilot = new DifferentialPilot(2, 10, leftMotor, rightMotor);
 		float currentDistance;
-		float threshold = 0.1f;
+		float threshold = 0.125f;
 		
 		for (int i = 0; i <= 50; i++) {
 			pilot.rotate(-1);
@@ -156,7 +155,7 @@ public class RopeBridgeBehaviour implements IBehaviour {
 	
 	private void findEdge() {
 		float currentDistance;
-		this.rightMotor.setSpeed(294);
+		this.rightMotor.setSpeed(290);
 		this.leftMotor.setSpeed(300);
 		this.leftMotor.forward();
 		this.rightMotor.forward();
@@ -200,7 +199,7 @@ public class RopeBridgeBehaviour implements IBehaviour {
 		float powerA, powerB, error, kp, turn, minDistance = 0.1f;
 		int baseSpeed = 300;
 		
-		while (true) {
+		while (!lineFound) {
 			currentDistance = getDistanceToWall();
 			
 			currentDistance = sanityCheck(currentDistance);

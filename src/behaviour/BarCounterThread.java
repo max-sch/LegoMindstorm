@@ -28,7 +28,6 @@ public class BarCounterThread extends Thread {
 	int counter = 0;
 	int lowerBound = 350;
 	private boolean isSharpCorner = false;
-	boolean checkSharpCornerComplete = false;
 	RegulatedMotor leftMotor;
 	RegulatedMotor rightMotor;
 	EV3ColorSensor colorSensor;
@@ -46,16 +45,18 @@ public class BarCounterThread extends Thread {
 	@Override
 	public void run() {
 		while (!this.isInterrupted()) {
-			if (!isCountingBars) {
-				checkIfBarCodeStarts();
-			} else {
-				countBarCode();
-				checkIfBarCodeIsFinished();
-				if (barCodeComplete) {
-					stopDrivingForward();
-					startBehaviorAccordingToBarCode();
-				}
-			}
+//			if (!isCountingBars) {
+//				checkIfBarCodeStarts();
+//			} else {
+//				countBarCode();
+//				checkIfBarCodeIsFinished();
+//				if (barCodeComplete) {
+//					stopDrivingForward();
+//					startBehaviorAccordingToBarCode();
+//				}
+//			}
+			checkIfBarCodeStarts();
+			
 			if (Button.readButtons() != 0) {
 				stopFollowingLine();
 				stopDrivingForward();
@@ -125,8 +126,8 @@ public class BarCounterThread extends Thread {
 
 	private void checkIfSharpLeftCorner() {
 		lineBehaviour.stopFollowLine();
-		checkerThread = new CheckIfSharpCornerThread(this, leftMotor, rightMotor, colorSensor);
-		checkerThread.start();
+//		checkerThread = new CheckIfSharpCornerThread(this, leftMotor, rightMotor, colorSensor);
+//		checkerThread.start();
 	}
 
 	private void keepFollowingLine() {
